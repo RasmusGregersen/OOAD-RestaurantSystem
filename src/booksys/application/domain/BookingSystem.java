@@ -81,7 +81,7 @@ public class BookingSystem
 			      String name, String phone)
   {
     tno = autoAssignTable(covers, time, tno);
-    if (!doubleBooked(time, tno, null) && !overflow(tno, covers)) {
+    if (!overflow(tno, covers)) {
       Booking b
 	= restaurant.makeReservation(covers, date, time, tno, name, phone) ;
       currentBookings.addElement(b) ;
@@ -92,7 +92,7 @@ public class BookingSystem
   public void makeWalkIn(int covers, Date date, Time time, int tno)
   {
     tno = autoAssignTable(covers, time, tno);
-    if (!doubleBooked(time, tno, null) && !overflow(tno, covers)) {
+    if (!overflow(tno, covers)) {
       Booking b = restaurant.makeWalkIn(covers, date, time, tno) ;
       currentBookings.addElement(b) ;
       notifyObservers() ;
@@ -100,23 +100,43 @@ public class BookingSystem
   }
 
   private int autoAssignTable(int covers, Time time, int tno) {
-    int TableID = 1;
+    int TableID = 0;
     if (covers <= 2) {
-      for (int i=1;i>11;i++) {
-        if (!doubleBooked(time, i, null)) {
+      for (int i=1;i<11;i++) {
+        if (!Booked(time, i, null) && TableID == 0) {
           TableID = i;
         }
       }
     }
     else {
-      for (int i=5;i>11;i++) {
-        if (!doubleBooked(time, i, null)) {
+      for (int i=5;i<11;i++) {
+        if (!Booked(time, i, null) && TableID == 0) {
           TableID = i;
         }
       }
     }
       return TableID;
   }
+
+  private boolean Booked(Time startTime, int tno, Booking ignore)
+  {
+    boolean doubleBooked = false ;
+
+    Time endTime = (Time) startTime.clone() ;
+    endTime.setHours(endTime.getHours() + 2) ;
+
+    Enumeration enumV = currentBookings.elements() ;
+    while (!doubleBooked && enumV.hasMoreElements()) {
+      Booking b = (Booking) enumV.nextElement() ;
+      if (b != ignore && b.getTableNumber() == tno
+              && startTime.before(b.getEndTime())
+              && endTime.after(b.getTime())) {
+        doubleBooked = true ;
+      }
+    }
+    return doubleBooked ;
+  }
+
 
   public void selectBooking(int tno, Time time)
   {
@@ -173,7 +193,7 @@ public class BookingSystem
       notifyObservers() ;
     }
   }
-  
+
   private boolean doubleBooked(Time startTime, int tno, Booking ignore)
   {
     boolean doubleBooked = false ;
