@@ -80,6 +80,7 @@ public class BookingSystem
   public void makeReservation(int covers, Date date, Time time, int tno,
 			      String name, String phone)
   {
+    tno = autoAssignTable(covers, time, tno);
     if (!doubleBooked(time, tno, null) && !overflow(tno, covers)) {
       Booking b
 	= restaurant.makeReservation(covers, date, time, tno, name, phone) ;
@@ -90,13 +91,33 @@ public class BookingSystem
  
   public void makeWalkIn(int covers, Date date, Time time, int tno)
   {
+    tno = autoAssignTable(covers, time, tno);
     if (!doubleBooked(time, tno, null) && !overflow(tno, covers)) {
       Booking b = restaurant.makeWalkIn(covers, date, time, tno) ;
       currentBookings.addElement(b) ;
       notifyObservers() ;
     }
   }
-  
+
+  private int autoAssignTable(int covers, Time time, int tno) {
+    int TableID = 1;
+    if (covers <= 2) {
+      for (int i=1;i>11;i++) {
+        if (!doubleBooked(time, i, null)) {
+          TableID = i;
+        }
+      }
+    }
+    else {
+      for (int i=5;i>11;i++) {
+        if (!doubleBooked(time, i, null)) {
+          TableID = i;
+        }
+      }
+    }
+      return TableID;
+  }
+
   public void selectBooking(int tno, Time time)
   {
     selectedBooking = null ;
